@@ -1,0 +1,17 @@
+{
+    "short_name": "Pomodoro Clock",
+    "name": "Pomodoro Clock",
+    "description": "A Pomodoro Clock using vue.js",
+    "start_url": "/",
+    "icons": [
+        {
+            "src": "assets/img/144.png",
+            "sizes": "144x144",
+            "type": "image/png"
+        }
+    ],
+    "background_color": "#FFFFFF",
+    "theme_color": "#0c7cbd",
+    "display": "standalone",
+    "orientation": "portrait"
+}

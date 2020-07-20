@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0c7cbd">
+    <link rel="shortcut icon" href="assets/img/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="assets/img/favicon.ico" type="image/x-icon">
+    <link rel="manifest" href="./mainfest.json">
+    <title>Pomodoro Clock</title>
+    
+    <style>
+        @font-face {
+            font-family: DIGITALDREAM;
+            src: url(assets/DIGITALDREAM.ttf);
+        }
+        
+        body {
+            margin: 0;
+            font-family: DIGITALDREAM;
+            font-size: 28px;
+        }
+        
+        #app {
+            height: 100vh;
+            width: 100vw;
+            display: table;
+            background-color: #0c7cbd;
+            color: #fff;
+        }
+        
+        #clock {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: center;
+        }
+        
+        button {
+            background: none;
+            border: none;
+        }
+        button:focus {
+            outline: none;
+        }
+        button:hover {
+            cursor: pointer;
+        }
+        
+        svg {
+            fill: white;
+            transform: scale(1.7);
+            transition: fill .5s;
+        }
+        button:hover svg {
+            fill: #044a73;
+        }
+        .times {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .times>div {
+            width: 50%;
+        }
+        
+        .timer {
+            display: inline-block;
+            background: #044a73;
+            width: 265px;
+            border-radius: 20px;
+        }
+        
+        .buttons {
+            margin: 20px;
+        }
+        
+        @media (max-width: 520px) {
+            body {
+                font-size: 18px;
+            }
+            
+            .times>div label {
+                display: block;
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    
+    <div id="app">
+        
+        <div id="clock">
+            
+            <div class="times">
+                <!-- Session Time -->
+                <div>
+                    <p id="session-label">Session Time</p>
+                    <button id="session-increment" @click="change('session', 1)">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+                            <path d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+                        </svg>
+                    </button>
+                    <label id="session-length">{{ this.sessionTime }}</label>
+                    <button id="session-decrement" @click="change('session', -1)">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+                            <path d="M0 0h24v24H0V0z" fill="none"/>
+                            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+                        </svg>
+                    </button>
+                </div>
+                <!-- Break Time -->
+                <div>
+                    <p id="break-label">Break Time</p>
+                    <button id="break-increment" @click="change('break', 1)">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+                            <path d="M0 0h24v24H0z" fill="none"/>
+                            <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/>
+                        </svg>
+                    </button>
+                    <label id="break-length">{{ this.breakTime }}</label>
+                    <button id="break-decrement" @click="change('break', -1)">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+                            <path d="M0 0h24v24H0V0z" fill="none"/>
+                            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="timer">
+                <p id="timer-label">{{ currentTimer.type }}</p>
+                <p id="time-left">{{ currentTimer.time | time }}</p>
+            </div>
+            
+            <div class="buttons">
+                <button id="start_stop" @click="playPause">
+                    <!-- Play Button -->
+                    <svg v-if="!running" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+                        <path d="M0 0h24v24H0V0z" fill="none"/>
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+                    </svg>
+                    <!-- Pause Button -->
+                    <svg v-if="running" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24">
+                        <g>
+                            <rect fill="none" height="24" width="24"/>
+                            <rect fill="none" height="24" width="24"/>
+                            <rect fill="none" height="24" width="24"/>
+                        </g>
+                        <g>
+                            <path d="M12,2C6.48,2,2,6.48,2,12s4.48,10,10,10s10-4.48,10-10S17.52,2,12,2z M11,16H9V8h2V16z M15,16h-2V8h2V16z"/>
+                        </g>
+                    </svg>
+                </button>
+                
+                <button id="reset" @click="reset">
+                    <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+                        <path d="M0 0h24v24H0V0z" fill="none"/>
+                        <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8L5.24 7.74C4.46 8.97 4 10.43 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/>
+                    </svg>
+                </button>
+                
+            </div>
+            
+        </div>
+        
+        
+        <audio id="beep" src="./assets/beep.mp3" ref="audio"></audio>
+        
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <script>
+        (function() {
+            // Register service worker
+            if (navigator.serviceWorker) {
+                navigator.serviceWorker.register('serviceWorker.js');
+            }
+            
+            const app = new Vue({
+                el: '#app',
+                data: {
+                    running: false,
+                    sessionTime: 25,
+                    breakTime: 5,
+                    currentTimer: {
+                        type: 'session',
+                        time: 25 * 60,
+                    },
+                    interval: 0,
+                },
+                
+                methods: {
+                    reset() {
+                        // Reset state
+                        this.sessionTime = 25;
+                        this.breakTime = 5;
+                        this.currentTimer = {
+                            type: 'session',
+                            time: 25 * 60,
+                        };
+                        // Pause audio
+                        this.$refs.audio.currentTime = 0;
+                        this.$refs.audio.pause();
+                        // Stop timer
+                        if (this.running) {
+                            this.running = false;
+                            clearInterval(this.interval);
+                        }
+                    },
+                    
+                    change(type, value) {
+                        if (!this.running) {
+                            const newTime = (this[`${type}Time`] + value) * 60;
+                            if (newTime > 0  && newTime <= 3600) {
+                                this[`${type}Time`] += value;
+                                // If this type is displayed we update it
+                                if (this.currentTimer.type === type) {
+                                    this.currentTimer.time = this[`${type}Time`] * 60;
+                                }
+                            }
+                        }
+                    },
+                    
+                    run() {
+                        if (this.currentTimer.time > 0) {
+                            this.currentTimer.time--;
+                        }
+                        else {
+                            this.$refs.audio.play();
+                            this.currentTimer.type = this.currentTimer.type === 'session' ? 'break' : 'session';
+                            this.currentTimer.time = this[`${this.currentTimer.type}Time`] * 60;
+                        }
+                        
+                    },
+                    
+                    playPause() {
+                        this.running =! this.running;
+                        if (this.running) {
+                            this.interval = setInterval(this.run, 1000);
+                        }
+                        else {
+                            clearInterval(this.interval);
+                        }
+                    },
+                },
+                
+                filters: {
+                    // 300 => 05:00
+                    time(number) {
+                        const minutes = Math.floor(number / 60);
+                        const seconds = number - minutes * 60;
+                        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    },
+                },
+                
+            });
+        })();
+    </script>
+    
+</body>
+</html>
