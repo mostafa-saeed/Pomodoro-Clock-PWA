@@ -177,19 +177,25 @@
             if (navigator.serviceWorker) {
                 navigator.serviceWorker.register('serviceWorker.js');
             }
+
+            const _getTimer = () => JSON.parse(localStorage.getItem('timer')) || false;
+
+            const _setTimer = timer => localStorage.setItem('timer', JSON.stringify(timer));
+
+            const defaultTimer = {
+                running: false,
+                sessionTime: 25,
+                breakTime: 5,
+                currentTimer: {
+                    type: 'session',
+                    time: 25 * 60,
+                },
+                interval: 0,
+            };
             
             const app = new Vue({
                 el: '#app',
-                data: {
-                    running: false,
-                    sessionTime: 25,
-                    breakTime: 5,
-                    currentTimer: {
-                        type: 'session',
-                        time: 25 * 60,
-                    },
-                    interval: 0,
-                },
+                data: () => _getTimer() || defaultTimer,
                 
                 methods: {
                     reset() {
@@ -236,7 +242,7 @@
                     },
                     
                     playPause() {
-                        this.running =! this.running;
+                        this.running = !this.running;
                         if (this.running) {
                             this.interval = setInterval(this.run, 1000);
                         }
@@ -254,7 +260,19 @@
                         return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
                     },
                 },
+
+                mounted() {
+                    if (this.running) {
+                        this.interval = setInterval(this.run, 1000);
+                    }
+                },
                 
+                watch: {
+                    $data: {
+                        handler: value => _setTimer(value),
+                        deep: true,
+                    },
+                },
             });
         })();
     </script>
